@@ -1,13 +1,4 @@
-## Make it So
-
-Source: https://github.com/FirebaseExtended/make-it-so-android/
-
-
-This is the source code for Make It So, a sample app that demonstrates how to use Firebase in an Android app. 
-
-Version 2 of this app was built in 2025 and you can find it in the v2 folder - you will also find instructions to set up your Firebase project and connect it to the Make it So app. This version implements a new architecture, based on the latest recommendations outlined in the [Android Guide to App Architecture documentation](https://developer.android.com/topic/architecture). Similarly, the UI was developed in accordance with the best practices described in [Android's "Develop UI for Android" documentation](https://developer.android.com/develop/ui).
-
-# Make It So: Firebase 연동 TODO 안드로이드 앱
+# Make It So: Firebase 연동 TODO 안드로이드 앱 설계
 
 ## 1. 개요
 
@@ -65,17 +56,3 @@ UI 로직과 비즈니스 로직을 분리하여 유지보수성과 테스트 �
 ## 6. 의존성 주입
 
 *   **Hilt:** Android 앱의 표준 의존성 주입 라이브러리인 Hilt를 사용합니다. ViewModel에 Repository를 주입하거나, DataSource에 Firebase 인스턴스를 주입하는 등 컴포넌트 간의 결합도를 낮추고 코드의 재사용성과 테스트 용이성을 높입니다.
-
-## [부록] Firebase Setting up
-
-In order for this app to work, you will need to create a [Firebase project](https://firebase.google.com/):
-
-1. Clone this repository
-1. Create a Firebase project in the [Firebase Console](https://console.firebase.google.com/)
-1. Follow [these steps](https://firebase.google.com/docs/android/setup#register-app) to register Make it So app in your Firebase project
-1. Follow [these steps](https://firebase.google.com/docs/android/setup#add-config-file) to add the Firebase Android configuration file to Make it So
-1. [Create a Cloud Firestore database](https://firebase.google.com/docs/firestore/quickstart#create) in your Firebase project
-1. [Enable Anonymous Authentication](https://firebase.google.com/docs/auth/android/anonymous-auth#before-you-begin) in your Firebase project
-1. [Enable Email/Password Authentication](https://firebase.google.com/docs/auth/android/password-auth#before_you_begin) in your Firebase project
-1. Run the app using Android Studio Ladybug+ on a device/emulator with API level 23 or above
-1. Create your first to-do item in the app
