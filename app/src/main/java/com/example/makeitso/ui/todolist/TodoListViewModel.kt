@@ -21,6 +21,18 @@ class TodoListViewModel @Inject constructor(
 
     val todoItems = todoItemRepository.getTodoItems(authRepository.currentUserIdFlow)
 
+    private val _showAiNudgeDialog = MutableStateFlow(false)
+    val showAiNudgeDialog: StateFlow<Boolean>
+        get() = _showAiNudgeDialog.asStateFlow()
+
+    fun onNudgeButtonClick() {
+        _showAiNudgeDialog.value = true
+    }
+
+    fun onDialogDismiss() {
+        _showAiNudgeDialog.value = false
+    }
+
     fun loadCurrentUser() {
         launchCatching {
             if (authRepository.currentUser == null) {

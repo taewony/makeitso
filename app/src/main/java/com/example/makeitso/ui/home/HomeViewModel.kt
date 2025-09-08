@@ -9,7 +9,20 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor() : MainViewModel() {
-    private val _isLoadingUser = MutableStateFlow(true)
+    private val _isLoadingUser = MutableStateFlow(false)
     val isLoadingUser: StateFlow<Boolean>
         get() = _isLoadingUser.asStateFlow()
+
+    private val _showAiNudgeDialog = MutableStateFlow(false)
+    val showAiNudgeDialog: StateFlow<Boolean>
+        get() = _showAiNudgeDialog.asStateFlow()
+
+    fun onNudgeButtonClick() {
+        _showAiNudgeDialog.value = true
+    }
+
+    fun onDialogDismiss() {
+        _showAiNudgeDialog.value = false
+    }
 }
+

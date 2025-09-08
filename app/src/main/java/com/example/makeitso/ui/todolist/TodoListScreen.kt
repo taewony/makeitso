@@ -1,17 +1,20 @@
 package com.example.makeitso.ui.todolist
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -19,6 +22,7 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -31,8 +35,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.makeitso.R
@@ -40,12 +42,10 @@ import com.example.makeitso.data.model.TodoItem
 import com.example.makeitso.ui.shared.CenterTopAppBar
 import com.example.makeitso.ui.shared.LoadingIndicator
 import com.example.makeitso.ui.theme.DarkBlue
+import com.example.makeitso.ui.theme.DarkGrey
+import com.example.makeitso.ui.theme.LightGreen
 import com.example.makeitso.ui.theme.MakeItSoTheme
 import kotlinx.serialization.Serializable
-
-//@Serializable
-//data class TodoListRoute(val listId: String)
-//TODO: Use listId when multiple lists feature is implemented
 
 @Serializable
 object TodoListRoute
@@ -57,6 +57,7 @@ fun TodoListScreen(
     viewModel: TodoListViewModel = hiltViewModel()
 ) {
     val isLoadingUser by viewModel.isLoadingUser.collectAsStateWithLifecycle()
+    val showAiNudgeDialog by viewModel.showAiNudgeDialog.collectAsStateWithLifecycle()
 
     if (isLoadingUser) {
         LoadingIndicator()
@@ -65,6 +66,9 @@ fun TodoListScreen(
 
         TodoListScreenContent(
             todoItems = todoItems.value,
+            showAiNudgeDialog = showAiNudgeDialog,
+            onNudgeClick = viewModel::onNudgeButtonClick,
+            onDialogDismiss = viewModel::onDialogDismiss,
             openSettingsScreen = openSettingsScreen,
             openTodoItemScreen = openTodoItemScreen,
             updateItem = viewModel::updateItem
@@ -80,11 +84,27 @@ fun TodoListScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 fun TodoListScreenContent(
     todoItems: List<TodoItem>,
+    showAiNudgeDialog: Boolean,
+    onNudgeClick: () -> Unit,
+    onDialogDismiss: () -> Unit,
     openSettingsScreen: () -> Unit,
     openTodoItemScreen: (String) -> Unit,
     updateItem: (todoItem: TodoItem) -> Unit
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+
+    if (showAiNudgeDialog) {
+        AlertDialog(
+            onDismissRequest = onDialogDismiss,
+            title = { Text("AI Nudge") },
+            text = { Text("AI 비서가 잔소리를 시작합니다.") },
+            confirmButton = {
+                TextButton(onClick = onDialogDismiss) {
+                    Text("확인")
+                }
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -96,53 +116,40 @@ fun TodoListScreenContent(
                 scrollBehavior = scrollBehavior
             )
         },
+        floatingActionButton = {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                ExtendedFloatingActionButton(
+                    containerColor = DarkBlue,
+                    contentColor = Color.White,
+                    icon = { Icon(Icons.Filled.Add, "Create list button") },
+                    text = { Text(text = stringResource(R.string.create_todo_item)) },
+                    onClick = { openTodoItemScreen("") }
+                )
+                ExtendedFloatingActionButton(
+                    containerColor = LightGreen,
+                    contentColor = DarkGrey,
+                    icon = { Icon(Icons.Filled.AutoAwesome, "AI Nudge button") },
+                    text = { Text(text = "AI Nudge") },
+                    onClick = onNudgeClick
+                )
+            }
+        }
     ) { innerPadding ->
-        ConstraintLayout(
+        LazyColumn(
+            state = rememberLazyListState(),
             modifier = Modifier
                 .fillMaxSize()
-                .padding(
-                    top = innerPadding.calculateTopPadding(),
-                    start = 4.dp,
-                    end = 4.dp,
-                    bottom = 4.dp
-                )
+                .padding(innerPadding),
+            contentPadding = PaddingValues(8.dp)
         ) {
-            val (list, fab) = createRefs()
-            val listState = rememberLazyListState()
-
-            LazyColumn(
-                state = listState,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .constrainAs(list) {
-                        top.linkTo(parent.top)
-                        bottom.linkTo(fab.top)
-                        start.linkTo(parent.start)
-                        end.linkTo(parent.end)
-                        height = Dimension.fillToConstraints
-                    },
-                contentPadding = PaddingValues(8.dp)
-            ) {
-                items(todoItems) { todoItem ->
-                    TodoItem(todoItem, openTodoItemScreen) {
-                        updateItem(todoItem.copy(completed = it))
-                    }
+            items(todoItems) { todoItem ->
+                TodoItem(todoItem, openTodoItemScreen) {
+                    updateItem(todoItem.copy(completed = it))
                 }
             }
-
-            ExtendedFloatingActionButton(
-                modifier = Modifier
-                    .constrainAs(fab) {
-                        bottom.linkTo(parent.bottom)
-                        start.linkTo(parent.start)
-                    }
-                    .padding(horizontal = 16.dp),
-                containerColor = DarkBlue,
-                contentColor = Color.White,
-                icon = { Icon(Icons.Filled.Add, "Create list button") },
-                text = { Text(text = stringResource(R.string.create_todo_item)) },
-                onClick = { openTodoItemScreen("") }
-            )
         }
     }
 }
@@ -187,6 +194,9 @@ fun TodoListScreenPreview() {
     MakeItSoTheme(darkTheme = true) {
         TodoListScreenContent(
             todoItems = listOf(TodoItem()),
+            showAiNudgeDialog = false,
+            onNudgeClick = {},
+            onDialogDismiss = {},
             openSettingsScreen = {},
             openTodoItemScreen = {},
             updateItem = {}
