@@ -63,3 +63,24 @@ fun StandardButton(@StringRes label: Int, onButtonClick: () -> Unit) {
         )
     }
 }
+
+@Composable
+fun StandardTextButton(label: String, onButtonClick: () -> Unit) {
+    OutlinedButton(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp),
+        onClick = onButtonClick,
+        colors = ButtonDefaults.outlinedButtonColors(
+            containerColor = DarkBlue,
+            contentColor = Color.White
+        ),
+        border = BorderStroke(1.dp, DarkBlue)
+    ) {
+        Text(
+            text = label,
+            fontSize = 16.sp,
+            modifier = Modifier.padding(vertical = 6.dp)
+        )
+    }
+}

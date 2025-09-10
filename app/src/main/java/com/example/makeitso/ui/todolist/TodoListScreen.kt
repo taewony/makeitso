@@ -54,19 +54,45 @@ object TodoListRoute
 fun TodoListScreen(
     openSettingsScreen: () -> Unit,
     openTodoItemScreen: (String) -> Unit,
+    openOnboardingScreen: () -> Unit = {},
+    openSignUpScreen: () -> Unit = {},
+    openSignInScreen: () -> Unit = {},
     viewModel: TodoListViewModel = hiltViewModel()
 ) {
     val isLoadingUser by viewModel.isLoadingUser.collectAsStateWithLifecycle()
     val showAiNudgeDialog by viewModel.showAiNudgeDialog.collectAsStateWithLifecycle()
+    val aiNudgeMessage by viewModel.aiNudgeMessage.collectAsStateWithLifecycle()
+    val needsOnboarding by viewModel.needsOnboarding.collectAsStateWithLifecycle()
+    val needsSignUp by viewModel.needsSignUp.collectAsStateWithLifecycle()
+    val needsSignIn by viewModel.needsSignIn.collectAsStateWithLifecycle()
+
+    LaunchedEffect(needsSignUp) {
+        if (needsSignUp && !isLoadingUser) {
+            openSignUpScreen()
+        }
+    }
+
+    LaunchedEffect(needsSignIn) {
+        if (needsSignIn && !isLoadingUser) {
+            openSignInScreen()
+        }
+    }
+
+    LaunchedEffect(needsOnboarding) {
+        if (needsOnboarding && !isLoadingUser && !needsSignUp) {
+            openOnboardingScreen()
+        }
+    }
 
     if (isLoadingUser) {
         LoadingIndicator()
-    } else {
+    } else if (!needsSignUp && !needsSignIn && !needsOnboarding) {
         val todoItems = viewModel.todoItems.collectAsStateWithLifecycle(emptyList())
 
         TodoListScreenContent(
             todoItems = todoItems.value,
             showAiNudgeDialog = showAiNudgeDialog,
+            aiNudgeMessage = aiNudgeMessage,
             onNudgeClick = viewModel::onNudgeButtonClick,
             onDialogDismiss = viewModel::onDialogDismiss,
             openSettingsScreen = openSettingsScreen,
@@ -85,6 +111,7 @@ fun TodoListScreen(
 fun TodoListScreenContent(
     todoItems: List<TodoItem>,
     showAiNudgeDialog: Boolean,
+    aiNudgeMessage: String,
     onNudgeClick: () -> Unit,
     onDialogDismiss: () -> Unit,
     openSettingsScreen: () -> Unit,
@@ -96,8 +123,8 @@ fun TodoListScreenContent(
     if (showAiNudgeDialog) {
         AlertDialog(
             onDismissRequest = onDialogDismiss,
-            title = { Text("AI Nudge") },
-            text = { Text("AI 비서가 잔소리를 시작합니다.") },
+            title = { Text("AI 비서의 잔소리") },
+            text = { Text(aiNudgeMessage.ifEmpty { "AI 비서가 잔소리를 준비 중입니다..." }) },
             confirmButton = {
                 TextButton(onClick = onDialogDismiss) {
                     Text("확인")
@@ -195,6 +222,7 @@ fun TodoListScreenPreview() {
         TodoListScreenContent(
             todoItems = listOf(TodoItem()),
             showAiNudgeDialog = false,
+            aiNudgeMessage = "",
             onNudgeClick = {},
             onDialogDismiss = {},
             openSettingsScreen = {},

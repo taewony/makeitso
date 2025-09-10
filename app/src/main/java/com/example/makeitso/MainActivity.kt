@@ -21,6 +21,8 @@ import androidx.navigation.compose.rememberNavController
 import com.example.makeitso.data.model.ErrorMessage
 import com.example.makeitso.ui.home.HomeRoute
 import com.example.makeitso.ui.home.HomeScreen
+import com.example.makeitso.ui.onboarding.OnboardingRoute
+import com.example.makeitso.ui.onboarding.OnboardingScreen
 import com.example.makeitso.ui.settings.SettingsRoute
 import com.example.makeitso.ui.settings.SettingsScreen
 import com.example.makeitso.ui.signin.SignInRoute
@@ -66,12 +68,35 @@ class MainActivity : ComponentActivity() {
                                     navController.navigate(SettingsRoute) { launchSingleTop = true }
                                 }
                             ) }
+                            composable<OnboardingRoute> { OnboardingScreen(
+                                onOnboardingComplete = {
+                                    navController.navigate(TodoListRoute) { 
+                                        popUpTo(OnboardingRoute) { inclusive = true }
+                                        launchSingleTop = true 
+                                    }
+                                }
+                            ) }
                             composable<TodoListRoute> { TodoListScreen(
                                 openSettingsScreen = {
                                     navController.navigate(SettingsRoute) { launchSingleTop = true }
                                 },
                                 openTodoItemScreen = { itemId ->
                                     navController.navigate(TodoItemRoute(itemId)) { launchSingleTop = true }
+                                },
+                                openOnboardingScreen = {
+                                    navController.navigate(OnboardingRoute) { launchSingleTop = true }
+                                },
+                                openSignUpScreen = {
+                                    navController.navigate(SignUpRoute) { 
+                                        popUpTo(TodoListRoute) { inclusive = true }
+                                        launchSingleTop = true 
+                                    }
+                                },
+                                openSignInScreen = {
+                                    navController.navigate(SignInRoute) { 
+                                        popUpTo(TodoListRoute) { inclusive = true }
+                                        launchSingleTop = true 
+                                    }
                                 }
                             ) }
                             composable<SettingsRoute> { SettingsScreen(
@@ -95,8 +120,11 @@ class MainActivity : ComponentActivity() {
                                 }
                             ) }
                             composable<SignUpRoute> { SignUpScreen(
-                                openHomeScreen = {
-                                    navController.navigate(TodoListRoute) { launchSingleTop = true }
+                                openOnboardingScreen = {
+                                    navController.navigate(OnboardingRoute) { 
+                                        popUpTo(SignUpRoute) { inclusive = true }
+                                        launchSingleTop = true 
+                                    }
                                 },
                                 showErrorSnackbar = { errorMessage ->
                                     val message = getErrorMessage(errorMessage)

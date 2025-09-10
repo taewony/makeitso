@@ -11,46 +11,56 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import java.util.UUID
 
-class AuthRemoteDataSource(private val auth: FirebaseAuth?) {
-    // val currentUser: FirebaseUser? get() = auth.currentUser
-    var currentUser: FirebaseUser? = null
+// Mock FirebaseUser for Phase 1 local implementation
+data class MockFirebaseUser(
+    val uid: String,
+    val email: String? = null,
+    val isAnonymous: Boolean = false
+)
 
-    // val currentUserIdFlow: Flow<String?>
-    //     get() = callbackFlow {
-    //         val listener = FirebaseAuth.AuthStateListener { _ -> this.trySend(currentUser?.uid) }
-    //         auth.addAuthStateListener(listener)
-    //         awaitClose { auth.removeAuthStateListener(listener) }
-    //     }
-    val currentUserIdFlow: MutableStateFlow<String?> = MutableStateFlow(UUID.randomUUID().toString())
+class AuthRemoteDataSource(private val auth: FirebaseAuth?) {
+    private var mockCurrentUser: MockFirebaseUser? = null
+    
+    val currentUser: FirebaseUser? 
+        get() = mockCurrentUser as? FirebaseUser
+    
+    // For Phase 1, we'll use a simple approach to get current user ID
+    fun getCurrentUserId(): String? = mockCurrentUser?.uid
+    
+    val currentUserIdFlow: MutableStateFlow<String?> = MutableStateFlow(null)
 
 
     suspend fun createGuestAccount() {
-        // auth.signInAnonymously().await()
-        currentUserIdFlow.value = UUID.randomUUID().toString()
+        val userId = UUID.randomUUID().toString()
+        mockCurrentUser = MockFirebaseUser(uid = userId, isAnonymous = true)
+        currentUserIdFlow.value = userId
+        println("AuthRemoteDataSource: Created guest account with ID: $userId")
     }
 
     suspend fun signIn(email: String, password: String) {
-        // auth.signInWithEmailAndPassword(email, password).await()
-        currentUserIdFlow.value = UUID.randomUUID().toString()
+        val userId = UUID.randomUUID().toString()
+        mockCurrentUser = MockFirebaseUser(uid = userId, email = email, isAnonymous = false)
+        currentUserIdFlow.value = userId
+        println("AuthRemoteDataSource: Signed in user with ID: $userId, email: $email")
     }
 
     suspend fun linkAccount(email: String, password: String) {
-        // val credential = EmailAuthProvider.getCredential(email, password)
-        // auth.currentUser!!.linkWithCredential(credential).await()
+        // For Phase 1: Create a new account instead of linking
+        val userId = UUID.randomUUID().toString()
+        mockCurrentUser = MockFirebaseUser(uid = userId, email = email, isAnonymous = false)
+        currentUserIdFlow.value = userId
+        println("AuthRemoteDataSource: Created new account with ID: $userId, email: $email")
     }
 
     fun signOut() {
-        // if (auth.currentUser!!.isAnonymous) {
-        //     auth.currentUser!!.delete()
-        // }
-        // auth.signOut()
-        currentUser = null
+        println("AuthRemoteDataSource: Signing out user: ${mockCurrentUser?.uid}")
+        mockCurrentUser = null
         currentUserIdFlow.value = null
     }
 
     suspend fun deleteAccount() {
-        // auth.currentUser!!.delete().await()
-        currentUser = null
+        println("AuthRemoteDataSource: Deleting account: ${mockCurrentUser?.uid}")
+        mockCurrentUser = null
         currentUserIdFlow.value = null
     }
 }

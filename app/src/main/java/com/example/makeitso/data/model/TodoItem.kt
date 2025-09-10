@@ -1,6 +1,7 @@
 package com.example.makeitso.data.model
 
 import com.google.firebase.firestore.DocumentId
+import java.util.Date
 
 data class TodoItem(
     @DocumentId val id: String = "",
@@ -8,6 +9,9 @@ data class TodoItem(
     val priority: Int = Priority.NONE.value,
     val completed: Boolean = false,
     val flagged: Boolean = false,
+    val deadline: Deadline = Deadline.NONE,
+    val createdAt: Date = Date(),
+    val completedAt: Date? = null,
     val ownerId: String = ""
 )
 

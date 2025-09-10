@@ -40,14 +40,14 @@ object SignUpRoute
 
 @Composable
 fun SignUpScreen(
-    openHomeScreen: () -> Unit,
+    openOnboardingScreen: () -> Unit,
     showErrorSnackbar: (ErrorMessage) -> Unit,
     viewModel: SignUpViewModel = hiltViewModel()
 ) {
     val shouldRestartApp by viewModel.shouldRestartApp.collectAsStateWithLifecycle()
 
     if (shouldRestartApp) {
-        openHomeScreen()
+        openOnboardingScreen()
     } else {
         SignUpScreenContent(
             signUp = viewModel::signUp,

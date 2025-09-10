@@ -9,7 +9,12 @@ import kotlinx.coroutines.flow.StateFlow
 class AuthRepository @Inject constructor(
     private val authRemoteDataSource: AuthRemoteDataSource
 ) {
-    val currentUser: FirebaseUser? = authRemoteDataSource.currentUser
+    val currentUser: FirebaseUser? 
+        get() = authRemoteDataSource.currentUser
+    
+    // For Phase 1, we need a way to get current user ID
+    fun getCurrentUserId(): String? = authRemoteDataSource.getCurrentUserId()
+    
     val currentUserIdFlow: StateFlow<String?> = authRemoteDataSource.currentUserIdFlow
 
     suspend fun createGuestAccount() {

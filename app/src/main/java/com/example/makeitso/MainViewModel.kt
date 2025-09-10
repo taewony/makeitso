@@ -16,6 +16,8 @@ open class MainViewModel : ViewModel() {
     ) =
         viewModelScope.launch(
             CoroutineExceptionHandler { _, throwable ->
+                println("MainViewModel: Exception caught in launchCatching: ${throwable.message}")
+                throwable.printStackTrace()
                 Firebase.crashlytics.recordException(throwable)
                 val error = if (throwable.message.isNullOrBlank()) {
                     ErrorMessage.IdError(R.string.generic_error)

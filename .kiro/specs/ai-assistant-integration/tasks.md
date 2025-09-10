@@ -5,10 +5,14 @@
   - 기존 TodoItem 모델을 확장하여 deadline 필드 추가
   - _Requirements: 2.2, 3.2, 3.3_
 
-- [ ] 1.1 AI 관련 데이터 모델 생성
+- [x] 1.1 AI 관련 데이터 모델 생성
+
+
   - AiCharacter enum, UserGoals, UserProfile, AiMessage 데이터 클래스 구현
   - Deadline enum을 포함한 TodoItem 확장
   - _Requirements: 2.3, 3.2_
+
+
 
 - [ ] 1.2 로컬 데이터 소스 구현
   - UserProfileLocalDataSource를 SharedPreferences 기반으로 구현
@@ -18,9 +22,13 @@
 - [ ] 2. 사용자 프로필 관리 시스템 구현
   - 사용자 목표 설정 및 AI 캐릭터 선택 기능 구현
   - 온보딩 완료 상태 관리 로직 구현
+
+
   - _Requirements: 2.2, 2.3, 2.5_
 
-- [ ] 2.1 UserProfileRepository 구현
+- [x] 2.1 UserProfileRepository 구현
+
+
   - 사용자 프로필 CRUD 작업을 위한 repository 패턴 구현
   - 로컬 데이터 소스와 연동하는 repository 구현
   - _Requirements: 2.4, 2.5_
@@ -30,6 +38,9 @@
   - AI 캐릭터 선택 화면 구현
   - 온보딩 완료 후 메인 화면 이동 로직
   - _Requirements: 2.1, 2.2, 2.3, 2.5_
+
+
+
 
 - [ ] 3. 설정 화면 확장 및 개선
   - 기존 설정 화면에 목표 수정, 캐릭터 변경, 로그아웃 기능 추가
@@ -48,10 +59,13 @@
   - 필터링된 데이터 표시 UI 구현
   - _Requirements: 5.1, 5.2, 5.3_
 
-- [ ] 4. AI 프롬프트 서비스 및 응답 시스템 구현
+- [x] 4. AI 프롬프트 서비스 및 응답 시스템 구현
+
+
   - Phase 1용 미리 정의된 응답 시스템 구현
   - 캐릭터별 응답 템플릿 생성 및 관리
   - _Requirements: 4.1, 4.2, 4.8_
+
 
 - [ ] 4.1 AiPromptService 구현
   - 사용자 목표, TODO 항목, 캐릭터 정보를 기반으로 프롬프트 생성
