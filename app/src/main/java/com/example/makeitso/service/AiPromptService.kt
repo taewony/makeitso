@@ -35,9 +35,15 @@ class AiPromptService @Inject constructor() {
         val overdueTasks = getOverdueTasks(todoItems)
         val flaggedTasks = todoItems.filter { it.flagged && !it.completed }
         val highPriorityTasks = incompleteTasks.filter { it.priority >= 2 }
-        
+
+        val newestItem = if (triggerType == TriggerType.AUTO_CREATE) {
+            todoItems.maxByOrNull { it.createdAt.time }
+        } else {
+            null
+        }
+
         val currentTime = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault()).format(Date())
-        
+
         return """
 === AI 캐릭터 프롬프트 ===
 캐릭터: ${character.displayName}
@@ -59,33 +65,33 @@ class AiPromptService @Inject constructor() {
 
 === 미완료 할 일 상세 ===
 ${if (incompleteTasks.isEmpty()) {
-    "현재 미완료 할 일이 없습니다."
-} else {
-    incompleteTasks.mapIndexed { index, item ->
-        val status = when {
-            item.flagged -> "🔥 진행중"
-            isOverdue(item.createdAt, item.deadline, Date()) -> "🚨 마감초과"
-            item.priority >= 2 -> "⚡ 높은우선순위"
-            else -> "📝 대기중"
-        }
-        "${index + 1}. ${item.title} [$status] (우선순위: ${getPriorityText(item.priority)}, 마감: ${item.deadline.displayName})"
-    }.joinToString("\n")
-}}
+            "현재 미완료 할 일이 없습니다."
+        } else {
+            incompleteTasks.mapIndexed { index, item ->
+                val status = when {
+                    item == newestItem -> "✨ 새로 추가"
+                    item.flagged -> "🔥 진행중"
+                    isOverdue(item.createdAt, item.deadline, Date()) -> "🚨 마감초과"
+                    item.priority >= 2 -> "⚡ 높은우선순위"
+                    else -> "📝 대기중"
+                }
+                "${index + 1}. ${item.title} [$status] (우선순위: ${getPriorityText(item.priority)}, 마감: ${item.deadline.displayName})"
+            }.joinToString("\n")
+        }}
 
 === 최근 완료된 할 일 ===
 ${if (completedTasks.isEmpty()) {
-    "최근 완료된 할 일이 없습니다."
-} else {
-    completedTasks.takeLast(3).mapIndexed { index, item ->
-        "✅ ${item.title}"
-    }.joinToString("\n")
-}}
+            "최근 완료된 할 일이 없습니다."
+        } else {
+            completedTasks.takeLast(3).mapIndexed { index, item ->
+                "✅ ${item.title}"
+            }.joinToString("\n")
+        }}
 
 === 캐릭터 지침 ===
 - ${character.displayName}의 톤앤매너로 응답
+- ${if (triggerType == TriggerType.AUTO_CREATE) "새로 추가된 할 일을 마구 깍아 내리기" else "현재 상황에 대한 신랄하게 까는 비판"}
 - 사용자의 목표와 현재 상황을 고려한 개인화된 조언
-- ${if (triggerType == TriggerType.AUTO_CREATE) "새로운 할 일 추가에 대한 격려 또는 조언" else "현재 상황에 대한 동기부여 메시지"}
-- 구체적이고 실행 가능한 제안 포함
         """.trimIndent()
     }
 
@@ -141,7 +147,7 @@ ${if (completedTasks.isEmpty()) {
                 "완료한 것보다 남은 게 더 많잖아. 집중해서 끝내버려!"
             )
         }
-        
+
         return responses[Random.nextInt(responses.size)]
     }
 
@@ -174,7 +180,7 @@ ${if (completedTasks.isEmpty()) {
                 "이 정도면 괜찮긴 한데... 더 빨리 끝내면 좋겠어요!"
             )
         }
-        
+
         return responses[Random.nextInt(responses.size)]
     }
 
@@ -207,15 +213,15 @@ ${if (completedTasks.isEmpty()) {
                 "이 정도 수준으로는 평범한 결과밖에 얻을 수 없을 겁니다."
             )
         }
-        
+
         return responses[Random.nextInt(responses.size)]
     }
 
     private fun getOverdueTasks(todoItems: List<TodoItem>): List<TodoItem> {
         val now = Date()
         return todoItems.filter { item ->
-            !item.completed && item.deadline != Deadline.NONE && 
-            isOverdue(item.createdAt, item.deadline, now)
+            !item.completed && item.deadline != Deadline.NONE &&
+                    isOverdue(item.createdAt, item.deadline, now)
         }
     }
 
