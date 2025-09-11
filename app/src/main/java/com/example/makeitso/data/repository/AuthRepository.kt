@@ -1,15 +1,14 @@
 package com.example.makeitso.data.repository
 
-import com.google.firebase.auth.FirebaseUser
 import com.example.makeitso.data.datasource.AuthRemoteDataSource
-import kotlinx.coroutines.flow.Flow
-import javax.inject.Inject
+import com.example.makeitso.data.datasource.MockFirebaseUser
 import kotlinx.coroutines.flow.StateFlow
+import javax.inject.Inject
 
 class AuthRepository @Inject constructor(
     private val authRemoteDataSource: AuthRemoteDataSource
 ) {
-    val currentUser: FirebaseUser? 
+    val currentUser: MockFirebaseUser? 
         get() = authRemoteDataSource.currentUser
     
     // For Phase 1, we need a way to get current user ID
@@ -35,5 +34,13 @@ class AuthRepository @Inject constructor(
 
     suspend fun deleteAccount() {
         authRemoteDataSource.deleteAccount()
+    }
+    
+    fun hasUserSignedOut(): Boolean {
+        return authRemoteDataSource.hasUserSignedOut()
+    }
+    
+    fun getCurrentUserEmail(): String? {
+        return authRemoteDataSource.getCurrentUserEmail()
     }
 }

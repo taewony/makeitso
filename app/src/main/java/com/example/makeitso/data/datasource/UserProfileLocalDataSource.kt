@@ -1,79 +1,64 @@
 package com.example.makeitso.data.datasource
 
-import android.content.SharedPreferences
-import com.example.makeitso.data.model.AiCharacter
-import com.example.makeitso.data.model.UserGoals
+import com.example.makeitso.data.dao.UserProfileDao
+import com.example.makeitso.data.mapper.UserProfileMapper
 import com.example.makeitso.data.model.UserProfile
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class UserProfileLocalDataSource @Inject constructor(
-    private val sharedPreferences: SharedPreferences
+    private val userProfileDao: UserProfileDao
 ) {
-    private val _userProfileFlow = MutableStateFlow<UserProfile?>(null)
-    val userProfileFlow: Flow<UserProfile?> = _userProfileFlow.asStateFlow()
-
-    companion object {
-        private const val KEY_USER_ID = "user_id"
-        private const val KEY_SHORT_TERM_GOAL = "short_term_goal"
-        private const val KEY_LONG_TERM_GOAL = "long_term_goal"
-        private const val KEY_SELECTED_CHARACTER = "selected_character"
-        private const val KEY_ONBOARDING_COMPLETE = "onboarding_complete"
+    
+    fun getUserProfileFlow(userId: String): Flow<UserProfile?> {
+        return userProfileDao.getUserProfileFlow(userId).map { entity ->
+            entity?.let { UserProfileMapper.toDomain(it) }
+        }
     }
 
     suspend fun getUserProfile(userId: String): UserProfile? {
-        val storedUserId = sharedPreferences.getString(KEY_USER_ID, null)
-        if (storedUserId != userId) return null
-
-        val shortTermGoal = sharedPreferences.getString(KEY_SHORT_TERM_GOAL, "") ?: ""
-        val longTermGoal = sharedPreferences.getString(KEY_LONG_TERM_GOAL, "") ?: ""
-        val characterName = sharedPreferences.getString(KEY_SELECTED_CHARACTER, AiCharacter.HARSH_CRITIC.name)
-        val isOnboardingComplete = sharedPreferences.getBoolean(KEY_ONBOARDING_COMPLETE, false)
-
-        val character = try {
-            AiCharacter.valueOf(characterName ?: AiCharacter.HARSH_CRITIC.name)
-        } catch (e: IllegalArgumentException) {
-            AiCharacter.HARSH_CRITIC
+        println("UserProfileLocalDataSource: Getting profile for user: $userId")
+        val entity = userProfileDao.getUserProfile(userId)
+        return entity?.let { 
+            val profile = UserProfileMapper.toDomain(it)
+            println("UserProfileLocalDataSource: Found profile: $profile")
+            
+            // 세션 만료 체크
+            if (!UserProfileMapper.isSessionValid(it)) {
+                println("UserProfileLocalDataSource: Session expired for user: $userId")
+                return null
+            }
+            
+            profile
         }
-
-        val profile = UserProfile(
-            userId = userId,
-            goals = UserGoals(shortTermGoal, longTermGoal),
-            selectedCharacter = character,
-            isOnboardingComplete = isOnboardingComplete
-        )
-
-        _userProfileFlow.value = profile
-        return profile
     }
 
     suspend fun saveUserProfile(profile: UserProfile) {
         println("UserProfileLocalDataSource: Saving profile: $profile")
-        with(sharedPreferences.edit()) {
-            putString(KEY_USER_ID, profile.userId)
-            putString(KEY_SHORT_TERM_GOAL, profile.goals.shortTermGoal)
-            putString(KEY_LONG_TERM_GOAL, profile.goals.longTermGoal)
-            putString(KEY_SELECTED_CHARACTER, profile.selectedCharacter.name)
-            putBoolean(KEY_ONBOARDING_COMPLETE, profile.isOnboardingComplete)
-            apply()
-        }
-        _userProfileFlow.value = profile
-        println("UserProfileLocalDataSource: Profile saved successfully, flow updated")
+        val entity = UserProfileMapper.toEntity(profile)
+        userProfileDao.insertUserProfile(entity)
+        println("UserProfileLocalDataSource: Profile saved successfully to Room DB")
     }
 
-    suspend fun clearUserProfile() {
-        with(sharedPreferences.edit()) {
-            remove(KEY_USER_ID)
-            remove(KEY_SHORT_TERM_GOAL)
-            remove(KEY_LONG_TERM_GOAL)
-            remove(KEY_SELECTED_CHARACTER)
-            remove(KEY_ONBOARDING_COMPLETE)
-            apply()
-        }
-        _userProfileFlow.value = null
+    suspend fun clearUserProfile(userId: String) {
+        println("UserProfileLocalDataSource: Clearing profile for user: $userId")
+        userProfileDao.deleteUserProfile(userId)
+    }
+    
+    suspend fun clearAllProfiles() {
+        println("UserProfileLocalDataSource: Clearing all profiles")
+        userProfileDao.clearAllProfiles()
+    }
+    
+    suspend fun hasUserProfile(userId: String): Boolean {
+        return userProfileDao.hasUserProfile(userId) > 0
+    }
+    
+    suspend fun isSessionValid(userId: String): Boolean {
+        val expiryTime = userProfileDao.getSessionExpiry(userId) ?: return false
+        return System.currentTimeMillis() < expiryTime
     }
 }

@@ -14,7 +14,8 @@
 
 
 
-- [ ] 1.2 로컬 데이터 소스 구현
+- [x] 1.2 로컬 데이터 소스 구현
+
   - UserProfileLocalDataSource를 SharedPreferences 기반으로 구현
   - AiAssistantLocalDataSource를 메모리 기반으로 구현
   - _Requirements: 2.1, 2.4_
@@ -33,7 +34,10 @@
   - 로컬 데이터 소스와 연동하는 repository 구현
   - _Requirements: 2.4, 2.5_
 
-- [ ] 2.2 온보딩 화면 UI 구현
+
+
+- [x] 2.2 온보딩 화면 UI 구현
+
   - 단기/장기 목표 입력 화면 구현
   - AI 캐릭터 선택 화면 구현
   - 온보딩 완료 후 메인 화면 이동 로직
@@ -67,9 +71,13 @@
   - _Requirements: 4.1, 4.2, 4.8_
 
 
+
 - [ ] 4.1 AiPromptService 구현
   - 사용자 목표, TODO 항목, 캐릭터 정보를 기반으로 프롬프트 생성
   - Phase 1용 미리 정의된 응답 생성 로직 구현
+
+
+
   - _Requirements: 4.4, 4.5_
 
 - [ ] 4.2 캐릭터별 응답 템플릿 시스템

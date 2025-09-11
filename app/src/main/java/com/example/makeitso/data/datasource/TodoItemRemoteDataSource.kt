@@ -1,21 +1,13 @@
 package com.example.makeitso.data.datasource
 
 import com.example.makeitso.data.model.TodoItem
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.dataObjects
-import com.google.firebase.firestore.toObject
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.tasks.await
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import android.util.Log
 
-class TodoItemRemoteDataSource(private val firestore: FirebaseFirestore?) {
+class TodoItemRemoteDataSource {
     private val inMemoryTodoItems = MutableStateFlow<List<TodoItem>>(emptyList())
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     fun getTodoItems(currentUserIdFlow: Flow<String?>): Flow<List<TodoItem>> {
         Log.d("TodoItemRemoteDataSource", "getTodoItems called. Current inMemoryTodoItems: ${inMemoryTodoItems.value}")
         // return currentUserIdFlow.flatMapLatest { ownerId ->
@@ -55,6 +47,13 @@ class TodoItemRemoteDataSource(private val firestore: FirebaseFirestore?) {
         // firestore.collection(TODO_ITEMS_COLLECTION).document(itemId).delete().await()
         inMemoryTodoItems.value = inMemoryTodoItems.value.filterNot { it.id == itemId }
         Log.d("TodoItemRemoteDataSource", "After delete, inMemoryTodoItems: ${inMemoryTodoItems.value}")
+    }
+
+    suspend fun getAllTodoItems(userId: String): List<TodoItem> {
+        Log.d("TodoItemRemoteDataSource", "getAllTodoItems called for userId: $userId")
+        // Phase 1에서는 메모리 기반이므로 userId 필터링 없이 모든 아이템 반환
+        // Phase 3에서는 Firebase에서 userId로 필터링된 결과 반환
+        return inMemoryTodoItems.value.filter { it.ownerId == userId }
     }
 
     companion object {

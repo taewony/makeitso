@@ -33,4 +33,9 @@ class TodoItemRepository @Inject constructor(
         Log.d("TodoItemRepository", "delete called with itemId: $itemId")
         todoItemRemoteDataSource.delete(itemId)
     }
+
+    suspend fun getAllTodoItems(userId: String): List<TodoItem> {
+        Log.d("TodoItemRepository", "getAllTodoItems called for userId: $userId")
+        return todoItemRemoteDataSource.getAllTodoItems(userId)
+    }
 }

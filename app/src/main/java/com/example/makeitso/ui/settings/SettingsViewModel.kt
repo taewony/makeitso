@@ -28,6 +28,9 @@ class SettingsViewModel @Inject constructor(
     private val _userProfile = MutableStateFlow<UserProfile?>(null)
     val userProfile: StateFlow<UserProfile?> = _userProfile.asStateFlow()
 
+    private val _currentUserEmail = MutableStateFlow<String?>(null)
+    val currentUserEmail: StateFlow<String?> = _currentUserEmail.asStateFlow()
+
     private val _showGoalsDialog = MutableStateFlow(false)
     val showGoalsDialog: StateFlow<Boolean> = _showGoalsDialog.asStateFlow()
 
@@ -40,7 +43,9 @@ class SettingsViewModel @Inject constructor(
     fun loadCurrentUser() {
         launchCatching {
             val userId = authRepository.getCurrentUserId()
+            val userEmail = authRepository.getCurrentUserEmail()
             _isAnonymous.value = false // Phase 1에서는 항상 false
+            _currentUserEmail.value = userEmail
             
             userId?.let { id ->
                 val profile = userProfileRepository.getUserProfile(id)
@@ -97,9 +102,8 @@ class SettingsViewModel @Inject constructor(
 
     fun signOut() {
         launchCatching {
-            authRepository.getCurrentUserId()?.let { userId ->
-                userProfileRepository.clearUserProfile()
-            }
+            // 로그아웃 시 사용자 프로필은 삭제하지 않고 인증만 해제
+            // 이렇게 하면 기존 사용자로 인식되어 SignIn 화면으로 이동
             authRepository.signOut()
             _shouldRestartApp.value = true
         }
@@ -108,7 +112,7 @@ class SettingsViewModel @Inject constructor(
     fun deleteAccount() {
         launchCatching {
             authRepository.getCurrentUserId()?.let { userId ->
-                userProfileRepository.clearUserProfile()
+                userProfileRepository.clearUserProfile(userId)
             }
             authRepository.deleteAccount()
             _shouldRestartApp.value = true

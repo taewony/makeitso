@@ -10,8 +10,8 @@ import javax.inject.Singleton
 class UserProfileRepository @Inject constructor(
     private val userProfileLocalDataSource: UserProfileLocalDataSource
 ) {
-    fun getUserProfileFlow(): Flow<UserProfile?> {
-        return userProfileLocalDataSource.userProfileFlow
+    fun getUserProfileFlow(userId: String): Flow<UserProfile?> {
+        return userProfileLocalDataSource.getUserProfileFlow(userId)
     }
 
     suspend fun getUserProfile(userId: String): UserProfile? {
@@ -27,7 +27,19 @@ class UserProfileRepository @Inject constructor(
         userProfileLocalDataSource.saveUserProfile(profile)
     }
 
-    suspend fun clearUserProfile() {
-        userProfileLocalDataSource.clearUserProfile()
+    suspend fun clearUserProfile(userId: String) {
+        userProfileLocalDataSource.clearUserProfile(userId)
+    }
+    
+    suspend fun clearAllProfiles() {
+        userProfileLocalDataSource.clearAllProfiles()
+    }
+    
+    suspend fun hasUserProfile(userId: String): Boolean {
+        return userProfileLocalDataSource.hasUserProfile(userId)
+    }
+    
+    suspend fun isSessionValid(userId: String): Boolean {
+        return userProfileLocalDataSource.isSessionValid(userId)
     }
 }

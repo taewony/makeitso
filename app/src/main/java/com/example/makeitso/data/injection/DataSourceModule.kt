@@ -3,8 +3,6 @@ package com.example.makeitso.data.injection
 import com.example.makeitso.data.datasource.AuthRemoteDataSource
 import com.example.makeitso.data.datasource.TodoItemRemoteDataSource
 import com.example.makeitso.data.datasource.TodoListRemoteDataSource
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -17,19 +15,19 @@ object DataSourceModule {
 
     @Singleton
     @Provides
-    fun provideAuthRemoteDataSource(auth: FirebaseAuth?): AuthRemoteDataSource {
-        return AuthRemoteDataSource(auth)
+    fun provideAuthRemoteDataSource(): AuthRemoteDataSource {
+        return AuthRemoteDataSource()
     }
 
     @Singleton
     @Provides
-    fun provideTodoItemRemoteDataSource(firestore: FirebaseFirestore?): TodoItemRemoteDataSource {
-        return TodoItemRemoteDataSource(firestore)
+    fun provideTodoItemRemoteDataSource(): TodoItemRemoteDataSource {
+        return TodoItemRemoteDataSource()
     }
 
     @Singleton
     @Provides
-    fun provideTodoListRemoteDataSource(firestore: FirebaseFirestore?): TodoListRemoteDataSource {
-        return TodoListRemoteDataSource(firestore)
+    fun provideTodoListRemoteDataSource(): TodoListRemoteDataSource {
+        return TodoListRemoteDataSource()
     }
 }

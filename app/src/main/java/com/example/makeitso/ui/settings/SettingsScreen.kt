@@ -42,6 +42,7 @@ fun SettingsScreen(
     } else {
         val isAnonymous by viewModel.isAnonymous.collectAsStateWithLifecycle()
         val userProfile by viewModel.userProfile.collectAsStateWithLifecycle()
+        val currentUserEmail by viewModel.currentUserEmail.collectAsStateWithLifecycle()
         val showGoalsDialog by viewModel.showGoalsDialog.collectAsStateWithLifecycle()
         val showCharacterDialog by viewModel.showCharacterDialog.collectAsStateWithLifecycle()
         val showHistoryDialog by viewModel.showHistoryDialog.collectAsStateWithLifecycle()
@@ -53,6 +54,7 @@ fun SettingsScreen(
             deleteAccount = viewModel::deleteAccount,
             isAnonymous = isAnonymous,
             userProfile = userProfile,
+            currentUserEmail = currentUserEmail,
             showGoalsDialog = showGoalsDialog,
             showCharacterDialog = showCharacterDialog,
             showHistoryDialog = showHistoryDialog,
@@ -77,6 +79,7 @@ fun SettingsScreenContent(
     deleteAccount: () -> Unit,
     isAnonymous: Boolean,
     userProfile: UserProfile?,
+    currentUserEmail: String?,
     showGoalsDialog: Boolean,
     showCharacterDialog: Boolean,
     showHistoryDialog: Boolean,
@@ -99,6 +102,7 @@ fun SettingsScreenContent(
         topBar = {
             CenterTopAppBar(
                 title = stringResource(R.string.settings),
+                rightText = currentUserEmail,
                 scrollBehavior = scrollBehavior
             )
         },
@@ -261,6 +265,7 @@ fun SettingsScreenPreview() {
                 selectedCharacter = AiCharacter.HARSH_CRITIC,
                 isOnboardingComplete = true
             ),
+            currentUserEmail = "test@example.com",
             showGoalsDialog = false,
             showCharacterDialog = false,
             showHistoryDialog = false,

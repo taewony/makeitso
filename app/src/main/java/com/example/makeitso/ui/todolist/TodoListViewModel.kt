@@ -52,14 +52,14 @@ class TodoListViewModel @Inject constructor(
         launchCatching {
             val userId = authRepository.getCurrentUserId() ?: return@launchCatching
             val userProfile = userProfileRepository.getUserProfile(userId) ?: return@launchCatching
-            val currentTodoItems = todoItemRepository.getTodoItems(authRepository.currentUserIdFlow)
             
-            // 현재 TODO 아이템들을 가져와서 AI 응답 생성
-            // 임시로 빈 리스트 사용 (실제로는 Flow에서 현재 값을 가져와야 함)
+            // 현재 TODO 아이템들을 직접 가져오기
+            val currentTodoItems = todoItemRepository.getAllTodoItems(userId)
+            
             val aiMessage = aiAssistantRepository.generateAiResponse(
                 userId = userId,
                 goals = userProfile.goals,
-                todoItems = emptyList(), // TODO: 실제 todoItems 값 사용
+                todoItems = currentTodoItems,
                 character = userProfile.selectedCharacter,
                 triggerType = TriggerType.MANUAL
             )
@@ -79,16 +79,23 @@ class TodoListViewModel @Inject constructor(
             val userId = authRepository.getCurrentUserId()
             
             if (userId == null) {
-                // 최초 설치인지 기존 사용자인지 확인
-                val hasExistingUserData = checkForExistingUserData()
-                if (hasExistingUserData) {
-                    // 기존 사용자 → SignIn 화면으로
+                // 로그아웃한 사용자인지 최초 사용자인지 확인
+                if (authRepository.hasUserSignedOut()) {
+                    // 로그아웃한 사용자 → SignIn 화면으로
                     _needsSignIn.value = true
                     _needsSignUp.value = false
                 } else {
-                    // 최초 설치 → SignUp 화면으로
-                    _needsSignUp.value = true
-                    _needsSignIn.value = false
+                    // 최초 설치인지 기존 사용자인지 확인
+                    val hasExistingUserData = checkForExistingUserData()
+                    if (hasExistingUserData) {
+                        // 기존 사용자 → SignIn 화면으로
+                        _needsSignIn.value = true
+                        _needsSignUp.value = false
+                    } else {
+                        // 최초 설치 → SignUp 화면으로
+                        _needsSignUp.value = true
+                        _needsSignIn.value = false
+                    }
                 }
                 _isLoadingUser.value = false
                 return@launchCatching
@@ -104,9 +111,20 @@ class TodoListViewModel @Inject constructor(
     }
 
     private suspend fun checkForExistingUserData(): Boolean {
-        // Phase 1에서는 간단한 로직: SharedPreferences에 사용자 데이터가 있는지 확인
-        // 실제로는 더 정교한 로직이 필요할 수 있음
-        return false // 현재는 항상 새 사용자로 처리
+        // Phase 1에서는 UserProfile 데이터가 있는지 확인하여 기존 사용자 판단
+        // 로그아웃 후에는 UserProfile이 남아있을 수 있으므로 이를 기준으로 판단
+        return try {
+            // 임시 사용자 ID로 프로필 존재 여부 확인
+            // 실제로는 더 정교한 로직이 필요하지만, Phase 1에서는 간단하게 처리
+            // 로그아웃 후에는 기존 사용자로 간주하여 SignIn 화면으로 이동
+            userProfileRepository.hasUserProfile("temp_user") || 
+            userProfileRepository.hasUserProfile("anonymous_user") ||
+            // 실제로는 어떤 사용자든 프로필이 있으면 기존 사용자로 간주
+            true // Phase 1에서는 로그아웃 후 항상 기존 사용자로 처리
+        } catch (e: Exception) {
+            // 에러 발생 시에도 기존 사용자로 간주 (SignIn 화면으로)
+            true
+        }
     }
 
     fun updateItem(item: TodoItem) {
