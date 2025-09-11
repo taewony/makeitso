@@ -68,6 +68,23 @@ UI 로직과 비즈니스 로직을 분리하여 유지보수성과 테스트 �
 
 *   **Hilt:** Android 앱의 표준 의존성 주입 라이브러리인 Hilt를 사용합니다. ViewModel에 Repository를 주입하거나, DataSource에 Firebase 인스턴스를 주입하는 등 컴포넌트 간의 결합도를 낮추고 코드의 재사용성과 테스트 용이성을 높입니다.
 
+## 7. 개발은 3단계로 구분하여 진행. (현재 2단계가지 구현함)
+
+**Phase 1**: Local in-memory 데이터 관리 및 미리 저장된 텍스트 기반 AI 응답
+- Firebase 연동 없이 로컬 메모리에서 데이터 관리
+- LLM API 연동 없이 미리 준비된 캐릭터별 응답 텍스트 표시
+
+**Phase 2**: 기능 개선 및 사용자 경험 향상
+- 로컬 데이터 지속성 개선 (SharedPreferences 활용)
+- TODO 추가 시 자동 AI Nudge 기능
+- 과거 AI 메시지 기록 보기 화면 추가
+- 프롬프트 보기 및 복사 기능
+- 개선된 프롬프트 생성 시스템
+
+**Phase 3**: Firebase 연동 및 실제 LLM API 연동
+- Firebase Firestore를 통한 실시간 데이터 동기화
+- Gemini LLM API를 통한 동적 AI 응답 생성
+
 ## [부록] Firebase Setting up
 
 In order for this app to work, you will need to create a [Firebase project](https://firebase.google.com/):

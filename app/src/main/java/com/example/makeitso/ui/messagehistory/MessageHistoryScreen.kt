@@ -43,7 +43,8 @@ fun MessageHistoryScreen(
     MessageHistoryScreenContent(
         messages = messages,
         isLoading = isLoading,
-        onNavigateBack = onNavigateBack
+        onNavigateBack = onNavigateBack,
+        onDeleteAllClick = viewModel::deleteAllMessages
     )
 }
 
@@ -52,17 +53,30 @@ fun MessageHistoryScreen(
 fun MessageHistoryScreenContent(
     messages: List<AiMessage>,
     isLoading: Boolean,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onDeleteAllClick: () -> Unit
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
     Scaffold(
-        topBar = {
-            CenterTopAppBar(
-                title = "과거 AI 메시지 기록",
-                icon = Icons.AutoMirrored.Filled.ArrowBack,
-                iconDescription = "뒤로 가기",
-                action = onNavigateBack,
+                topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text("과거 AI 메시지 기록") },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "뒤로 가기"
+                        )
+                    }
+                },
+                actions = {
+                    if (messages.isNotEmpty()) {
+                        TextButton(onClick = onDeleteAllClick) {
+                            Text("모두 삭제")
+                        }
+                    }
+                },
                 scrollBehavior = scrollBehavior
             )
         }
@@ -223,7 +237,8 @@ fun MessageHistoryScreenPreview() {
                 )
             ),
             isLoading = false,
-            onNavigateBack = {}
+            onNavigateBack = {},
+            onDeleteAllClick = {}
         )
     }
 }

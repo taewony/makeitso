@@ -1,6 +1,7 @@
 package com.example.makeitso.data.injection
 
 import android.content.Context
+import com.example.makeitso.data.dao.TodoItemDao
 import com.example.makeitso.data.datasource.AuthRemoteDataSource
 import com.example.makeitso.data.datasource.TodoItemRemoteDataSource
 import com.example.makeitso.data.datasource.TodoListRemoteDataSource
@@ -23,8 +24,8 @@ object DataSourceModule {
 
     @Singleton
     @Provides
-    fun provideTodoItemRemoteDataSource(): TodoItemRemoteDataSource {
-        return TodoItemRemoteDataSource()
+    fun provideTodoItemRemoteDataSource(todoItemDao: TodoItemDao): TodoItemRemoteDataSource {
+        return TodoItemRemoteDataSource(todoItemDao)
     }
 
     @Singleton

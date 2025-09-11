@@ -21,6 +21,8 @@ import com.example.makeitso.data.model.AiCharacter
 import com.example.makeitso.data.model.UserGoals
 import com.example.makeitso.data.model.UserProfile
 import com.example.makeitso.ui.shared.CenterTopAppBar
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import com.example.makeitso.ui.shared.StandardButton
 import com.example.makeitso.ui.shared.StandardTextButton
 import com.example.makeitso.ui.theme.DarkBlue
@@ -53,6 +55,7 @@ fun SettingsScreen(
 
         SettingsScreenContent(
             loadCurrentUser = viewModel::loadCurrentUser,
+            openHomeScreen = openHomeScreen,
             openSignInScreen = openSignInScreen,
             openMessageHistoryScreen = openMessageHistoryScreen,
             signOut = viewModel::signOut,
@@ -79,6 +82,7 @@ fun SettingsScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 fun SettingsScreenContent(
     loadCurrentUser: () -> Unit,
+    openHomeScreen: () -> Unit,
     openSignInScreen: () -> Unit,
     openMessageHistoryScreen: () -> Unit,
     signOut: () -> Unit,
@@ -106,9 +110,25 @@ fun SettingsScreenContent(
 
     Scaffold(
         topBar = {
-            CenterTopAppBar(
-                title = stringResource(R.string.settings),
-                rightText = currentUserEmail,
+            CenterAlignedTopAppBar(
+                title = { Text(stringResource(R.string.settings)) },
+                navigationIcon = {
+                    IconButton(onClick = openHomeScreen) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                },
+                actions = {
+                    currentUserEmail?.let {
+                        Text(
+                            text = it,
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            fontSize = 12.sp
+                        )
+                    }
+                },
                 scrollBehavior = scrollBehavior
             )
         },
@@ -261,6 +281,7 @@ fun SettingsScreenPreview() {
     MakeItSoTheme(darkTheme = true) {
         SettingsScreenContent(
             loadCurrentUser = {},
+            openHomeScreen = {},
             openSignInScreen = {},
             openMessageHistoryScreen = {},
             signOut = {},

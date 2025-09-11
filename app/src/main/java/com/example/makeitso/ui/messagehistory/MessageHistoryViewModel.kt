@@ -39,4 +39,13 @@ class MessageHistoryViewModel @Inject constructor(
             }
         }
     }
+
+    fun deleteAllMessages() {
+        launchCatching {
+            val userId = authRepository.getCurrentUserId()
+            if (userId != null) {
+                aiAssistantRepository.clearAiMessages(userId)
+            }
+        }
+    }
 }

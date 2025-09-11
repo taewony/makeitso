@@ -44,7 +44,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setSoftInputMode()
+        
 
         setContent {
             val scope = rememberCoroutineScope()
@@ -157,13 +157,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun setSoftInputMode() {
-        // 한글 입력을 위한 최적화된 설정
-        window.setSoftInputMode(
-            WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE or 
-            WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE
-        )
-    }
+    
 
     private fun getErrorMessage(error: ErrorMessage): String {
         return when (error) {
