@@ -47,9 +47,11 @@ app/src/main/java/com/example/makeitso/
 ├── ui/
 │   ├── onboarding/                 # 초기 설정 화면
 │   ├── aiassistant/               # AI 비서 관련 UI
+│   ├── messagehistory/            # Phase 2: 과거 메시지 기록 화면
 │   └── settings/                  # 확장된 설정 화면
 └── service/
-    └── AiPromptService.kt         # 프롬프트 생성 서비스
+    ├── AiPromptService.kt         # 프롬프트 생성 서비스
+    └── SessionManager.kt          # Phase 2: 로그인 세션 관리
 ```
 ## 
 Components and Interfaces
@@ -112,6 +114,19 @@ enum class TriggerType {
     MANUAL,      // 사용자가 버튼 클릭
     AUTO_CREATE  // TODO 생성 시 자동
 }
+
+// Phase 2 추가 데이터 모델
+data class LoginSession(
+    val userId: String = "",
+    val loginTimestamp: Long = 0L,
+    val expiryTimestamp: Long = 0L
+)
+
+data class MessageHistoryItem(
+    val id: String = "",
+    val message: AiMessage,
+    val displayTimestamp: String = ""
+)
 ```
 
 ### 2. Repository Layer
@@ -143,7 +158,7 @@ interface AiAssistantRepository {
 
 ### 3. Service Layer
 
-#### AiPromptService
+#### AiPromptService (Enhanced for Phase 2)
 ```kotlin
 class AiPromptService {
     fun generatePrompt(
@@ -152,18 +167,63 @@ class AiPromptService {
         character: AiCharacter,
         triggerType: TriggerType
     ): String {
-        // Phase 1: 미리 정의된 템플릿 기반 응답 생성
-        // Phase 2: LLM API 연동을 위한 프롬프트 생성
+        // Phase 2: 구조화된 프롬프트 생성
+        return buildStructuredPrompt(goals, todoItems, character, triggerType)
     }
     
-    private fun generatePhase1Response(
+    private fun buildStructuredPrompt(
+        goals: UserGoals,
+        todoItems: List<TodoItem>,
         character: AiCharacter,
-        incompleteTasks: Int,
-        overdueTasks: Int
+        triggerType: TriggerType
+    ): String {
+        // 목표, TODO 리스트, 캐릭터 페르소나를 체계적으로 조합
+    }
+    
+    fun generateResponse(
+        goals: UserGoals,
+        todoItems: List<TodoItem>,
+        character: AiCharacter,
+        triggerType: TriggerType
     ): String {
         // 캐릭터별 미리 정의된 응답 반환
     }
 }
+
+// Phase 2 추가 서비스
+class SessionManager {
+    suspend fun saveLoginSession(userId: String)
+    suspend fun isSessionValid(): Boolean
+    suspend fun clearSession()
+    fun getSessionExpiryTime(): Long
+}
+```
+
+#### Phase 2 UI Components
+```kotlin
+// 과거 메시지 기록 화면
+@Composable
+fun MessageHistoryScreen(
+    onNavigateBack: () -> Unit,
+    viewModel: MessageHistoryViewModel = hiltViewModel()
+)
+
+// 프롬프트 보기 모달
+@Composable
+fun PromptViewDialog(
+    prompt: String,
+    onDismiss: () -> Unit,
+    onCopyToClipboard: (String) -> Unit
+)
+
+// 개선된 AI Nudge 모달
+@Composable
+fun EnhancedAiNudgeDialog(
+    message: String,
+    prompt: String,
+    onDismiss: () -> Unit,
+    onShowPrompt: () -> Unit
+)
 ```## Data
  Models
 
@@ -193,14 +253,21 @@ class AiPromptService {
         └── createdAt: timestamp
 ```
 
-### Phase 1 vs Phase 2 Data Handling
+### Phase 1 vs Phase 2 vs Phase 3 Data Handling
 
 **Phase 1 (Local In-Memory)**:
 - `UserProfileLocalDataSource`: SharedPreferences 사용
 - `AiAssistantLocalDataSource`: 메모리 기반 저장
 - 미리 정의된 응답 템플릿 사용
 
-**Phase 2 (Firebase + LLM)**:
+**Phase 2 (Enhanced Local Features)**:
+- `UserProfileLocalDataSource`: SharedPreferences 개선 (로그인 지속성)
+- `AiAssistantLocalDataSource`: 메모리 + SharedPreferences 하이브리드
+- 개선된 프롬프트 생성 시스템
+- 자동 AI Nudge 트리거
+- 과거 메시지 기록 관리
+
+**Phase 3 (Firebase + LLM)**:
 - `UserProfileRemoteDataSource`: Firestore 연동
 - `AiAssistantRemoteDataSource`: Cloud Functions + Firestore
 - Gemini API를 통한 동적 응답 생성
@@ -243,18 +310,25 @@ ting Strategy
 - 설정 변경 플로우 테스트
 
 ### 4. Phase-specific Testing
-**Phase 1**:
+**Phase 1** ✅:
 - 로컬 데이터 저장/로드 테스트
 - 미리 정의된 응답 생성 테스트
 
 **Phase 2**:
+- 자동 AI Nudge 트리거 테스트
+- 과거 메시지 기록 저장/조회 테스트
+- 프롬프트 생성 및 복사 기능 테스트
+- 로그인 세션 지속성 테스트
+- 한글 입력 및 표시 테스트
+
+**Phase 3**:
 - Firebase 실시간 동기화 테스트
 - Cloud Functions 트리거 테스트
 - LLM API 응답 처리 테스트
 
 ## Implementation Phases
 
-### Phase 1: Local Implementation
+### Phase 1: Local Implementation ✅ (완료)
 1. 새로운 데이터 모델 생성
 2. 로컬 데이터 소스 구현
 3. 온보딩 화면 구현
@@ -262,7 +336,15 @@ ting Strategy
 5. AI 응답 모달 개선
 6. 미리 정의된 응답 시스템
 
-### Phase 2: Firebase + LLM Integration
+### Phase 2: Enhanced Features & UX
+1. 자동 AI Nudge 트리거 구현
+2. 과거 메시지 기록 화면 개발
+3. 프롬프트 보기 및 복사 기능
+4. 개선된 프롬프트 생성 시스템
+5. 로그인 세션 지속성 개선
+6. 한글 입력 지원 확인 및 테스트
+
+### Phase 3: Firebase + LLM Integration
 1. Firebase 데이터 소스 구현
 2. Cloud Functions 개발
 3. Gemini API 연동

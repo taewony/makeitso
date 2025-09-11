@@ -6,13 +6,20 @@
 
 ## Development Phases
 
-개발은 2단계로 구분하여 진행합니다:
+개발은 3단계로 구분하여 진행합니다:
 
-**1단계**: Local in-memory 데이터 관리 및 미리 저장된 텍스트 기반 AI 응답
+**Phase 1**: Local in-memory 데이터 관리 및 미리 저장된 텍스트 기반 AI 응답
 - Firebase 연동 없이 로컬 메모리에서 데이터 관리
 - LLM API 연동 없이 미리 준비된 캐릭터별 응답 텍스트 표시
 
-**2단계**: Firebase 연동 및 실제 LLM API 연동
+**Phase 2**: 기능 개선 및 사용자 경험 향상
+- 로컬 데이터 지속성 개선 (SharedPreferences 활용)
+- TODO 추가 시 자동 AI Nudge 기능
+- 과거 AI 메시지 기록 보기 화면 추가
+- 프롬프트 보기 및 복사 기능
+- 개선된 프롬프트 생성 시스템
+
+**Phase 3**: Firebase 연동 및 실제 LLM API 연동
 - Firebase Firestore를 통한 실시간 데이터 동기화
 - Gemini LLM API를 통한 동적 AI 응답 생성
 
@@ -84,7 +91,68 @@
 6. WHEN a user wants to logout THEN the system SHALL provide logout option in settings and clear session upon confirmation
 7. WHEN settings are modified THEN the system SHALL update user profile in Firestore and apply changes immediately
 
-### Requirement 6: Firebase 및 LLM 연동
+### Requirement 6: 자동 AI Nudge 및 TODO 연동 (Phase 2)
+
+**User Story:** As a user, I want the AI assistant to automatically provide feedback when I add new todo items, so that I receive immediate motivation and guidance.
+
+#### Acceptance Criteria
+
+1. WHEN a user creates a new todo item THEN the system SHALL automatically trigger AI nudge generation without manual button click
+2. WHEN AI nudge is auto-triggered THEN the system SHALL display the message in modal dialog immediately after todo creation
+3. WHEN todo item is added THEN the system SHALL include the new item in AI prompt generation context
+4. WHEN auto-nudge is displayed THEN the user SHALL be able to dismiss it with confirmation button
+5. WHEN multiple todos are added quickly THEN the system SHALL queue AI responses appropriately
+
+### Requirement 7: 과거 AI 메시지 기록 관리 (Phase 2)
+
+**User Story:** As a user, I want to view my past AI assistant messages, so that I can review previous advice and track my interaction history.
+
+#### Acceptance Criteria
+
+1. WHEN a user selects "과거 기록 보기" in settings THEN the system SHALL navigate to message history screen
+2. WHEN message history screen loads THEN the system SHALL display all past AI messages in chronological order (newest first)
+3. WHEN displaying message history THEN each entry SHALL show message content, timestamp, and trigger type (manual/auto)
+4. WHEN message history is empty THEN the system SHALL display appropriate empty state message
+5. WHEN user navigates back from history THEN the system SHALL return to settings screen
+
+### Requirement 8: 프롬프트 보기 및 복사 기능 (Phase 2)
+
+**User Story:** As a user, I want to see and copy the AI prompts used to generate responses, so that I can understand how the AI assistant works and reuse prompts elsewhere.
+
+#### Acceptance Criteria
+
+1. WHEN AI nudge modal is displayed THEN the system SHALL show "확인+" button in bottom-left corner alongside "확인" button
+2. WHEN user clicks "확인+" button THEN the system SHALL display the generated prompt in a new modal dialog
+3. WHEN prompt modal is displayed THEN the system SHALL show "copy" button in bottom-left and "확인" button in bottom-right
+4. WHEN user clicks "copy" button THEN the system SHALL copy prompt content to device clipboard
+5. WHEN user clicks "확인" in prompt modal THEN the system SHALL dismiss the prompt modal
+6. WHEN clipboard copy succeeds THEN the system SHALL provide visual feedback (toast or snackbar)
+
+### Requirement 9: 개선된 프롬프트 생성 시스템 (Phase 2)
+
+**User Story:** As a system, I need to generate comprehensive prompts that properly combine user goals, todo items, and character personas, so that AI responses are more contextual and relevant.
+
+#### Acceptance Criteria
+
+1. WHEN generating AI prompt THEN the system SHALL include user's short-term and long-term goals in context
+2. WHEN generating AI prompt THEN the system SHALL include complete todo list with completion status, priorities, and deadlines
+3. WHEN generating AI prompt THEN the system SHALL include selected character persona and speaking style
+4. WHEN generating AI prompt THEN the system SHALL include trigger context (manual button click vs auto todo creation)
+5. WHEN prompt is generated THEN the system SHALL format it as structured text with clear sections for goals, todos, and character instructions
+
+### Requirement 10: 로그인 상태 지속성 개선 (Phase 2)
+
+**User Story:** As a user, I want my login session to persist for 4 weeks as intended, so that I don't need to repeatedly sign in during normal usage.
+
+#### Acceptance Criteria
+
+1. WHEN user successfully logs in THEN the system SHALL store login timestamp in persistent storage
+2. WHEN app starts THEN the system SHALL check if current time is within 4 weeks of last login
+3. WHEN login session is valid THEN the system SHALL automatically authenticate user without credentials
+4. WHEN login session expires (after 4 weeks) THEN the system SHALL redirect to sign-in screen
+5. WHEN user manually logs out THEN the system SHALL clear stored login timestamp
+
+### Requirement 11: Firebase 및 LLM 연동 (Phase 3)
 
 **User Story:** As a system, I need to integrate with Firebase services and Gemini LLM API, so that user data is securely stored and AI responses are generated reliably.
 
