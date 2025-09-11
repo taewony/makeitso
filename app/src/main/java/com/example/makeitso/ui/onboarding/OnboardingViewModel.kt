@@ -60,34 +60,43 @@ class OnboardingViewModel @Inject constructor(
             println("OnboardingViewModel: Starting onboarding completion")
             _uiState.value = currentState.copy(isLoading = true)
 
-            val userId = authRepository.getCurrentUserId()
-            println("OnboardingViewModel: Current user ID = $userId")
-            
-            if (userId == null) {
-                println("OnboardingViewModel: ERROR - No current user found")
-                _uiState.value = currentState.copy(isLoading = false)
-                return@launchCatching
-            }
-            
-            val userProfile = UserProfile(
-                userId = userId,
-                goals = UserGoals(
-                    shortTermGoal = currentState.shortTermGoal,
-                    longTermGoal = currentState.longTermGoal
-                ),
-                selectedCharacter = currentState.selectedCharacter,
-                isOnboardingComplete = true
-            )
+            try {
+                val userId = authRepository.getCurrentUserId()
+                println("OnboardingViewModel: Current user ID = $userId")
+                
+                if (userId == null) {
+                    println("OnboardingViewModel: ERROR - No current user found")
+                    _uiState.value = currentState.copy(isLoading = false)
+                    return@launchCatching
+                }
+                
+                val userProfile = UserProfile(
+                    userId = userId,
+                    goals = UserGoals(
+                        shortTermGoal = currentState.shortTermGoal,
+                        longTermGoal = currentState.longTermGoal
+                    ),
+                    selectedCharacter = currentState.selectedCharacter,
+                    isOnboardingComplete = true
+                )
 
-            println("OnboardingViewModel: Creating user profile: $userProfile")
-            userProfileRepository.createUserProfile(userProfile)
-            println("OnboardingViewModel: User profile created successfully")
-            
-            _uiState.value = currentState.copy(
-                isLoading = false,
-                isComplete = true
-            )
-            println("OnboardingViewModel: Onboarding marked as complete")
+                println("OnboardingViewModel: Creating user profile: $userProfile")
+                userProfileRepository.createUserProfile(userProfile)
+                println("OnboardingViewModel: User profile created successfully")
+                
+                // 잠시 대기 후 완료 상태로 변경 (UI 업데이트 보장)
+                kotlinx.coroutines.delay(500)
+                
+                _uiState.value = currentState.copy(
+                    isLoading = false,
+                    isComplete = true
+                )
+                println("OnboardingViewModel: Onboarding marked as complete")
+            } catch (e: Exception) {
+                println("OnboardingViewModel: Error during onboarding completion: ${e.message}")
+                e.printStackTrace()
+                _uiState.value = currentState.copy(isLoading = false)
+            }
         }
     }
 }

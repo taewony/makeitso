@@ -22,8 +22,17 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SelectableChipColors
 import androidx.compose.material3.Text
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -34,8 +43,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.makeitso.R
@@ -70,6 +82,10 @@ fun TodoItemScreen(
     viewModel: TodoItemViewModel = hiltViewModel()
 ) {
     val navigateToTodoList by viewModel.navigateToTodoList.collectAsStateWithLifecycle()
+    val showAutoAiNudge by viewModel.showAutoAiNudge.collectAsStateWithLifecycle()
+    val autoAiNudgeMessage by viewModel.autoAiNudgeMessage.collectAsStateWithLifecycle()
+    val showAutoPromptDialog by viewModel.showAutoPromptDialog.collectAsStateWithLifecycle()
+    val currentAutoPrompt by viewModel.currentAutoPrompt.collectAsStateWithLifecycle()
 
     if (navigateToTodoList) {
         openTodoListScreen()
@@ -81,7 +97,14 @@ fun TodoItemScreen(
             showErrorSnackbar = showErrorSnackbar,
             saveItem = viewModel::saveItem,
             deleteItem = viewModel::deleteItem,
-            loadItem = viewModel::loadItem
+            loadItem = viewModel::loadItem,
+            showAutoAiNudge = showAutoAiNudge,
+            autoAiNudgeMessage = autoAiNudgeMessage,
+            showAutoPromptDialog = showAutoPromptDialog,
+            currentAutoPrompt = currentAutoPrompt,
+            dismissAutoAiNudge = viewModel::dismissAutoAiNudge,
+            showAutoPrompt = viewModel::showAutoPrompt,
+            hideAutoPrompt = viewModel::hideAutoPrompt
         )
     }
 }
@@ -92,7 +115,14 @@ fun TodoItemScreen(
     showErrorSnackbar: (ErrorMessage) -> Unit,
     saveItem: (TodoItem, (ErrorMessage) -> Unit) -> Unit,
     deleteItem: (TodoItem) -> Unit,
-    loadItem: () -> Unit
+    loadItem: () -> Unit,
+    showAutoAiNudge: Boolean,
+    autoAiNudgeMessage: String,
+    showAutoPromptDialog: Boolean,
+    currentAutoPrompt: String,
+    dismissAutoAiNudge: () -> Unit,
+    showAutoPrompt: () -> Unit,
+    hideAutoPrompt: () -> Unit
 ) {
     if (todoItem == null) {
         LoadingIndicator()
@@ -102,6 +132,23 @@ fun TodoItemScreen(
             showErrorSnackbar = showErrorSnackbar,
             saveItem = saveItem,
             deleteItem = deleteItem
+        )
+    }
+
+    // 자동 AI Nudge 다이얼로그
+    if (showAutoAiNudge) {
+        EnhancedAutoAiNudgeDialog(
+            message = autoAiNudgeMessage,
+            onDismiss = dismissAutoAiNudge,
+            onShowPrompt = showAutoPrompt
+        )
+    }
+
+    // 자동 AI 프롬프트 다이얼로그
+    if (showAutoPromptDialog) {
+        AutoPromptDialog(
+            prompt = currentAutoPrompt,
+            onDismiss = hideAutoPrompt
         )
     }
 
@@ -153,7 +200,14 @@ fun TodoItemScreenContent(
                     .padding(horizontal = 24.dp),
                 value = editableItem.value.title,
                 onValueChange = { editableItem.value = editableItem.value.copy(title = it) },
-                label = { Text(stringResource(R.string.title)) }
+                label = { Text(stringResource(R.string.title)) },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Text,
+                    imeAction = ImeAction.Done,
+                    autoCorrect = true
+                ),
+                singleLine = false,
+                maxLines = 3
             )
 
             Spacer(Modifier.size(24.dp))
@@ -281,6 +335,69 @@ private fun getPriorityChipColors(selectedColor: Color): SelectableChipColors {
         selectedLabelColor = DarkGrey,
         selectedLeadingIconColor = DarkGrey,
         selectedTrailingIconColor = DarkGrey
+    )
+}
+
+@Composable
+fun EnhancedAutoAiNudgeDialog(
+    message: String,
+    onDismiss: () -> Unit,
+    onShowPrompt: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("AI 비서의 한마디 💬") },
+        text = { Text(message) },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("확인")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onShowPrompt) {
+                Text("확인+")
+            }
+        }
+    )
+}
+
+@Composable
+fun AutoPromptDialog(
+    prompt: String,
+    onDismiss: () -> Unit
+) {
+    val clipboardManager = LocalClipboardManager.current
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("AI 프롬프트 📋") },
+        text = {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState())
+            ) {
+                Text(
+                    text = prompt,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontFamily = FontFamily.Monospace,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("확인")
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = {
+                    clipboardManager.setText(AnnotatedString(prompt))
+                    android.util.Log.d("TodoItemScreen", "프롬프트가 클립보드에 복사되었습니다")
+                }
+            ) {
+                Text("복사")
+            }
+        }
     )
 }
 

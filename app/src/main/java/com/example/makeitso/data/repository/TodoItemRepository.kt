@@ -20,13 +20,16 @@ class TodoItemRepository @Inject constructor(
     }
 
     suspend fun create(todoItem: TodoItem): String {
-        Log.d("TodoItemRepository", "create called with todoItem: $todoItem")
-        return todoItemRemoteDataSource.create(todoItem)
+        Log.d("TodoItemRepository", "TODO 아이템 생성: $todoItem")
+        val newId = todoItemRemoteDataSource.create(todoItem)
+        Log.d("TodoItemRepository", "TODO 아이템 생성 완료, ID: $newId")
+        return newId
     }
 
     suspend fun update(todoItem: TodoItem) {
-        Log.d("TodoItemRepository", "update called with todoItem: $todoItem")
+        Log.d("TodoItemRepository", "TODO 아이템 업데이트: $todoItem")
         todoItemRemoteDataSource.update(todoItem)
+        Log.d("TodoItemRepository", "TODO 아이템 업데이트 완료")
     }
 
     suspend fun delete(itemId: String) {

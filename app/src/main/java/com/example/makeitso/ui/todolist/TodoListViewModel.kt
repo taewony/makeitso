@@ -36,6 +36,14 @@ class TodoListViewModel @Inject constructor(
     val aiNudgeMessage: StateFlow<String>
         get() = _aiNudgeMessage.asStateFlow()
 
+    private val _showPromptDialog = MutableStateFlow(false)
+    val showPromptDialog: StateFlow<Boolean>
+        get() = _showPromptDialog.asStateFlow()
+
+    private val _currentPrompt = MutableStateFlow("")
+    val currentPrompt: StateFlow<String>
+        get() = _currentPrompt.asStateFlow()
+
     private val _needsOnboarding = MutableStateFlow(false)
     val needsOnboarding: StateFlow<Boolean>
         get() = _needsOnboarding.asStateFlow()
@@ -65,6 +73,7 @@ class TodoListViewModel @Inject constructor(
             )
             
             _aiNudgeMessage.value = aiMessage.response
+            _currentPrompt.value = aiMessage.prompt
             _showAiNudgeDialog.value = true
         }
     }
@@ -72,9 +81,23 @@ class TodoListViewModel @Inject constructor(
     fun onDialogDismiss() {
         _showAiNudgeDialog.value = false
         _aiNudgeMessage.value = ""
+        _currentPrompt.value = ""
+    }
+
+    fun showPrompt() {
+        _showPromptDialog.value = true
+    }
+
+    fun hidePrompt() {
+        _showPromptDialog.value = false
     }
 
     fun loadCurrentUser() {
+        // 로컬 DB 데이터 출력을 별도 코루틴에서 실행 (메인 스레드 블로킹 방지)
+        launchCatching {
+            printLocalDbData()
+        }
+        
         launchCatching {
             val userId = authRepository.getCurrentUserId()
             
@@ -107,6 +130,39 @@ class TodoListViewModel @Inject constructor(
             _needsSignIn.value = false
 
             _isLoadingUser.value = false
+        }
+    }
+
+    private suspend fun printLocalDbData() {
+        try {
+            android.util.Log.d("TodoListViewModel", "=== 로컬 DB 데이터 출력 시작 ===")
+            
+            // 현재 로그인된 사용자 이메일 출력
+            val currentUserEmail = authRepository.getCurrentUserEmail()
+            android.util.Log.d("TodoListViewModel", "현재 로그인된 사용자 이메일: $currentUserEmail")
+            
+            // 모든 사용자 프로필 출력 (실제로는 현재 사용자만)
+            val currentUserId = authRepository.getCurrentUserId()
+            if (currentUserId != null) {
+                val userProfile = userProfileRepository.getUserProfile(currentUserId)
+                android.util.Log.d("TodoListViewModel", "사용자 프로필: $userProfile")
+                
+                // TODO 아이템들 출력
+                val todoItems = todoItemRepository.getAllTodoItems(currentUserId)
+                android.util.Log.d("TodoListViewModel", "TODO 아이템 개수: ${todoItems.size}")
+                todoItems.take(5).forEachIndexed { index, item -> // 최대 5개만 출력
+                    android.util.Log.d("TodoListViewModel", "TODO[$index]: ${item.title} (완료: ${item.completed})")
+                }
+                
+                // AI 메시지 개수만 간단히 출력 (Flow collect 제거)
+                android.util.Log.d("TodoListViewModel", "AI 메시지 조회 생략 (메인 스레드 보호)")
+            } else {
+                android.util.Log.d("TodoListViewModel", "현재 로그인된 사용자가 없습니다.")
+            }
+            
+            android.util.Log.d("TodoListViewModel", "=== 로컬 DB 데이터 출력 완료 ===")
+        } catch (e: Exception) {
+            android.util.Log.e("TodoListViewModel", "로컬 DB 데이터 출력 중 오류: ${e.message}", e)
         }
     }
 

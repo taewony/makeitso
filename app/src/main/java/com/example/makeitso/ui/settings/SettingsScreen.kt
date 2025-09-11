@@ -8,9 +8,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.makeitso.R
@@ -33,6 +36,7 @@ object SettingsRoute
 fun SettingsScreen(
     openHomeScreen: () -> Unit,
     openSignInScreen: () -> Unit,
+    openMessageHistoryScreen: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val shouldRestartApp by viewModel.shouldRestartApp.collectAsStateWithLifecycle()
@@ -50,6 +54,7 @@ fun SettingsScreen(
         SettingsScreenContent(
             loadCurrentUser = viewModel::loadCurrentUser,
             openSignInScreen = openSignInScreen,
+            openMessageHistoryScreen = openMessageHistoryScreen,
             signOut = viewModel::signOut,
             deleteAccount = viewModel::deleteAccount,
             isAnonymous = isAnonymous,
@@ -75,6 +80,7 @@ fun SettingsScreen(
 fun SettingsScreenContent(
     loadCurrentUser: () -> Unit,
     openSignInScreen: () -> Unit,
+    openMessageHistoryScreen: () -> Unit,
     signOut: () -> Unit,
     deleteAccount: () -> Unit,
     isAnonymous: Boolean,
@@ -154,7 +160,7 @@ fun SettingsScreenContent(
                     
                     StandardTextButton(
                         label = "과거 기록 보기",
-                        onButtonClick = onShowHistoryDialog
+                        onButtonClick = openMessageHistoryScreen
                     )
                     
                     Spacer(Modifier.size(24.dp))
@@ -256,6 +262,7 @@ fun SettingsScreenPreview() {
         SettingsScreenContent(
             loadCurrentUser = {},
             openSignInScreen = {},
+            openMessageHistoryScreen = {},
             signOut = {},
             deleteAccount = {},
             isAnonymous = false,
@@ -302,7 +309,13 @@ fun GoalsEditDialog(
                     onValueChange = { shortTermGoal = it },
                     label = { Text("단기 목표") },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    singleLine = false,
+                    maxLines = 2,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Next,
+                        autoCorrect = true
+                    )
                 )
                 
                 OutlinedTextField(
@@ -310,7 +323,13 @@ fun GoalsEditDialog(
                     onValueChange = { longTermGoal = it },
                     label = { Text("장기 목표") },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    singleLine = false,
+                    maxLines = 2,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Done,
+                        autoCorrect = true
+                    )
                 )
             }
         },

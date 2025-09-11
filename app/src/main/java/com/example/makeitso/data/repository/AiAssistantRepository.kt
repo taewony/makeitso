@@ -45,7 +45,10 @@ class AiAssistantRepository @Inject constructor(
     }
 
     suspend fun saveAiMessage(message: AiMessage): String {
-        return aiAssistantLocalDataSource.saveAiMessage(message)
+        android.util.Log.d("AiAssistantRepository", "AI 메시지 저장: ${message.response.take(50)}...")
+        val messageId = aiAssistantLocalDataSource.saveAiMessage(message)
+        android.util.Log.d("AiAssistantRepository", "AI 메시지 저장 완료, ID: $messageId")
+        return messageId
     }
 
     suspend fun getAiMessage(messageId: String): AiMessage? {

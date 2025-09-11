@@ -10,9 +10,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.makeitso.R
@@ -99,7 +103,13 @@ fun OnboardingScreenContent(
                     label = { Text("단기 목표") },
                     placeholder = { Text("예: 이번 달 운동 10회 하기") },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    singleLine = false,
+                    maxLines = 2,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Next,
+                        autoCorrect = true
+                    )
                 )
 
                 OutlinedTextField(
@@ -108,7 +118,13 @@ fun OnboardingScreenContent(
                     label = { Text("장기 목표") },
                     placeholder = { Text("예: 1년 내 건강한 체중 달성하기") },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    singleLine = false,
+                    maxLines = 2,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Done,
+                        autoCorrect = true
+                    )
                 )
             }
         }
@@ -169,15 +185,31 @@ fun OnboardingScreenContent(
         // 완료 버튼
         Button(
             onClick = onComplete,
-            enabled = uiState.canComplete,
+            enabled = uiState.canComplete && !uiState.isLoading,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)
         ) {
-            Text(
-                text = "설정 완료",
-                style = MaterialTheme.typography.titleMedium
-            )
+            if (uiState.isLoading) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                    Text(
+                        text = "저장 중...",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+            } else {
+                Text(
+                    text = "설정 완료",
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
         }
 
         if (!uiState.canComplete) {

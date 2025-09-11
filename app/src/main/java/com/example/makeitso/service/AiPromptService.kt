@@ -20,27 +20,72 @@ class AiPromptService @Inject constructor() {
         character: AiCharacter,
         triggerType: TriggerType
     ): String {
+        return buildStructuredPrompt(goals, todoItems, character, triggerType)
+    }
+
+    // Phase 2: 개선된 구조화된 프롬프트 생성
+    private fun buildStructuredPrompt(
+        goals: UserGoals,
+        todoItems: List<TodoItem>,
+        character: AiCharacter,
+        triggerType: TriggerType
+    ): String {
         val incompleteTasks = todoItems.filter { !it.completed }
+        val completedTasks = todoItems.filter { it.completed }
         val overdueTasks = getOverdueTasks(todoItems)
         val flaggedTasks = todoItems.filter { it.flagged && !it.completed }
-
+        val highPriorityTasks = incompleteTasks.filter { it.priority >= 2 }
+        
+        val currentTime = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault()).format(Date())
+        
         return """
-            # AI 캐릭터: ${character.displayName}
-            # 페르소나: ${character.promptPersona}
-            
-            ## 사용자 목표:
-            - 단기 목표: ${goals.shortTermGoal}
-            - 장기 목표: ${goals.longTermGoal}
-            
-            ## 현재 상황:
-            - 전체 할 일: ${todoItems.size}개
-            - 미완료 할 일: ${incompleteTasks.size}개
-            - 마감 지난 할 일: ${overdueTasks.size}개
-            - 진행 중인 할 일: ${flaggedTasks.size}개
-            - 트리거 유형: ${if (triggerType == TriggerType.MANUAL) "수동 호출" else "자동 생성"}
-            
-            ## 미완료 할 일 목록:
-            ${incompleteTasks.joinToString("\n") { "- ${it.title} (우선순위: ${getPriorityText(it.priority)}, 마감: ${it.deadline.displayName})" }}
+=== AI 캐릭터 프롬프트 ===
+캐릭터: ${character.displayName}
+페르소나: ${character.promptPersona}
+생성 시간: $currentTime
+트리거: ${if (triggerType == TriggerType.MANUAL) "사용자 수동 호출" else "TODO 생성 자동 트리거"}
+
+=== 사용자 목표 분석 ===
+🎯 단기 목표: "${goals.shortTermGoal}"
+🏆 장기 목표: "${goals.longTermGoal}"
+
+=== 현재 상황 요약 ===
+📊 전체 할 일: ${todoItems.size}개
+✅ 완료된 할 일: ${completedTasks.size}개 (${if (todoItems.isNotEmpty()) String.format("%.1f", completedTasks.size * 100.0 / todoItems.size) else "0.0"}%)
+⏳ 미완료 할 일: ${incompleteTasks.size}개
+🚨 마감 지난 할 일: ${overdueTasks.size}개
+🔥 진행 중인 할 일: ${flaggedTasks.size}개
+⚡ 높은 우선순위: ${highPriorityTasks.size}개
+
+=== 미완료 할 일 상세 ===
+${if (incompleteTasks.isEmpty()) {
+    "현재 미완료 할 일이 없습니다."
+} else {
+    incompleteTasks.mapIndexed { index, item ->
+        val status = when {
+            item.flagged -> "🔥 진행중"
+            isOverdue(item.createdAt, item.deadline, Date()) -> "🚨 마감초과"
+            item.priority >= 2 -> "⚡ 높은우선순위"
+            else -> "📝 대기중"
+        }
+        "${index + 1}. ${item.title} [$status] (우선순위: ${getPriorityText(item.priority)}, 마감: ${item.deadline.displayName})"
+    }.joinToString("\n")
+}}
+
+=== 최근 완료된 할 일 ===
+${if (completedTasks.isEmpty()) {
+    "최근 완료된 할 일이 없습니다."
+} else {
+    completedTasks.takeLast(3).mapIndexed { index, item ->
+        "✅ ${item.title}"
+    }.joinToString("\n")
+}}
+
+=== 캐릭터 지침 ===
+- ${character.displayName}의 톤앤매너로 응답
+- 사용자의 목표와 현재 상황을 고려한 개인화된 조언
+- ${if (triggerType == TriggerType.AUTO_CREATE) "새로운 할 일 추가에 대한 격려 또는 조언" else "현재 상황에 대한 동기부여 메시지"}
+- 구체적이고 실행 가능한 제안 포함
         """.trimIndent()
     }
 

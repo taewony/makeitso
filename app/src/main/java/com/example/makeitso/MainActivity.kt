@@ -21,6 +21,8 @@ import androidx.navigation.compose.rememberNavController
 import com.example.makeitso.data.model.ErrorMessage
 import com.example.makeitso.ui.home.HomeRoute
 import com.example.makeitso.ui.home.HomeScreen
+import com.example.makeitso.ui.messagehistory.MessageHistoryRoute
+import com.example.makeitso.ui.messagehistory.MessageHistoryScreen
 import com.example.makeitso.ui.onboarding.OnboardingRoute
 import com.example.makeitso.ui.onboarding.OnboardingScreen
 import com.example.makeitso.ui.settings.SettingsRoute
@@ -105,6 +107,14 @@ class MainActivity : ComponentActivity() {
                                 },
                                 openSignInScreen = {
                                     navController.navigate(SignInRoute) { launchSingleTop = true }
+                                },
+                                openMessageHistoryScreen = {
+                                    navController.navigate(MessageHistoryRoute) { launchSingleTop = true }
+                                }
+                            ) }
+                            composable<MessageHistoryRoute> { MessageHistoryScreen(
+                                onNavigateBack = {
+                                    navController.popBackStack()
                                 }
                             ) }
                             composable<SignInRoute> { SignInScreen(
@@ -148,7 +158,11 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun setSoftInputMode() {
-        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
+        // 한글 입력을 위한 최적화된 설정
+        window.setSoftInputMode(
+            WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE or 
+            WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE
+        )
     }
 
     private fun getErrorMessage(error: ErrorMessage): String {

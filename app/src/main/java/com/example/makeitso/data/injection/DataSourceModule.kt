@@ -1,11 +1,13 @@
 package com.example.makeitso.data.injection
 
+import android.content.Context
 import com.example.makeitso.data.datasource.AuthRemoteDataSource
 import com.example.makeitso.data.datasource.TodoItemRemoteDataSource
 import com.example.makeitso.data.datasource.TodoListRemoteDataSource
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -15,8 +17,8 @@ object DataSourceModule {
 
     @Singleton
     @Provides
-    fun provideAuthRemoteDataSource(): AuthRemoteDataSource {
-        return AuthRemoteDataSource()
+    fun provideAuthRemoteDataSource(@ApplicationContext context: Context): AuthRemoteDataSource {
+        return AuthRemoteDataSource(context)
     }
 
     @Singleton

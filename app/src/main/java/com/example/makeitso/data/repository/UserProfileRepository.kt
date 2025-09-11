@@ -19,12 +19,16 @@ class UserProfileRepository @Inject constructor(
     }
 
     suspend fun createUserProfile(profile: UserProfile): String {
+        android.util.Log.d("UserProfileRepository", "사용자 프로필 생성: $profile")
         userProfileLocalDataSource.saveUserProfile(profile)
+        android.util.Log.d("UserProfileRepository", "사용자 프로필 저장 완료")
         return profile.userId
     }
 
     suspend fun updateUserProfile(profile: UserProfile) {
+        android.util.Log.d("UserProfileRepository", "사용자 프로필 업데이트: $profile")
         userProfileLocalDataSource.saveUserProfile(profile)
+        android.util.Log.d("UserProfileRepository", "사용자 프로필 업데이트 완료")
     }
 
     suspend fun clearUserProfile(userId: String) {

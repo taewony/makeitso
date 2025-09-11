@@ -25,6 +25,15 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -62,6 +71,8 @@ fun TodoListScreen(
     val isLoadingUser by viewModel.isLoadingUser.collectAsStateWithLifecycle()
     val showAiNudgeDialog by viewModel.showAiNudgeDialog.collectAsStateWithLifecycle()
     val aiNudgeMessage by viewModel.aiNudgeMessage.collectAsStateWithLifecycle()
+    val showPromptDialog by viewModel.showPromptDialog.collectAsStateWithLifecycle()
+    val currentPrompt by viewModel.currentPrompt.collectAsStateWithLifecycle()
     val needsOnboarding by viewModel.needsOnboarding.collectAsStateWithLifecycle()
     val needsSignUp by viewModel.needsSignUp.collectAsStateWithLifecycle()
     val needsSignIn by viewModel.needsSignIn.collectAsStateWithLifecycle()
@@ -93,8 +104,12 @@ fun TodoListScreen(
             todoItems = todoItems.value,
             showAiNudgeDialog = showAiNudgeDialog,
             aiNudgeMessage = aiNudgeMessage,
+            showPromptDialog = showPromptDialog,
+            currentPrompt = currentPrompt,
             onNudgeClick = viewModel::onNudgeButtonClick,
             onDialogDismiss = viewModel::onDialogDismiss,
+            onShowPrompt = viewModel::showPrompt,
+            onHidePrompt = viewModel::hidePrompt,
             openSettingsScreen = openSettingsScreen,
             openTodoItemScreen = openTodoItemScreen,
             updateItem = viewModel::updateItem
@@ -112,22 +127,71 @@ fun TodoListScreenContent(
     todoItems: List<TodoItem>,
     showAiNudgeDialog: Boolean,
     aiNudgeMessage: String,
+    showPromptDialog: Boolean,
+    currentPrompt: String,
     onNudgeClick: () -> Unit,
     onDialogDismiss: () -> Unit,
+    onShowPrompt: () -> Unit,
+    onHidePrompt: () -> Unit,
     openSettingsScreen: () -> Unit,
     openTodoItemScreen: (String) -> Unit,
     updateItem: (todoItem: TodoItem) -> Unit
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+    val clipboardManager = LocalClipboardManager.current
 
+    // 개선된 AI Nudge 다이얼로그 (확인+ 버튼 포함)
     if (showAiNudgeDialog) {
         AlertDialog(
             onDismissRequest = onDialogDismiss,
-            title = { Text("AI 비서의 잔소리") },
-            text = { Text(aiNudgeMessage.ifEmpty { "AI 비서가 잔소리를 준비 중입니다..." }) },
+            title = { Text("AI 비서의 잔소리 💬") },
+            text = { 
+                Text(aiNudgeMessage.ifEmpty { "AI 비서가 잔소리를 준비 중입니다..." }) 
+            },
             confirmButton = {
                 TextButton(onClick = onDialogDismiss) {
                     Text("확인")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onShowPrompt) {
+                    Text("확인+")
+                }
+            }
+        )
+    }
+
+    // 프롬프트 보기 다이얼로그
+    if (showPromptDialog) {
+        AlertDialog(
+            onDismissRequest = onHidePrompt,
+            title = { Text("AI 프롬프트 📋") },
+            text = {
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState())
+                ) {
+                    Text(
+                        text = currentPrompt,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontFamily = FontFamily.Monospace,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = onHidePrompt) {
+                    Text("확인")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        clipboardManager.setText(AnnotatedString(currentPrompt))
+                        // 복사 완료 피드백은 간단하게 로그로 처리
+                        android.util.Log.d("TodoListScreen", "프롬프트가 클립보드에 복사되었습니다")
+                    }
+                ) {
+                    Text("복사")
                 }
             }
         )
@@ -223,8 +287,12 @@ fun TodoListScreenPreview() {
             todoItems = listOf(TodoItem()),
             showAiNudgeDialog = false,
             aiNudgeMessage = "",
+            showPromptDialog = false,
+            currentPrompt = "",
             onNudgeClick = {},
             onDialogDismiss = {},
+            onShowPrompt = {},
+            onHidePrompt = {},
             openSettingsScreen = {},
             openTodoItemScreen = {},
             updateItem = {}
